@@ -1,4 +1,6 @@
 pub mod bits;
+pub mod escaped_string;
+pub mod filesystem;
 pub mod number;
 pub mod range;
 pub mod string;
