@@ -5,5 +5,4 @@ edition = "2024"
 
 [dependencies]
 ansi_term = "*"
-parser_lib = { path = "../parser_lib" }
 xml-rs = "*"

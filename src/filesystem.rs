@@ -3,8 +3,6 @@ use std::{
     io::{BufReader, Write},
     path::{Path, PathBuf},
 };
-
-use parser_lib::common::ParsingError;
 use xml::{reader::XmlEvent, EventReader};
 
 pub fn get_file_extension(file_path: &str) -> Option<&str> {
@@ -144,52 +142,39 @@ pub fn read_xml_string(file_path: &Path, target_node: &str) -> Option<String> {
     None
 }
 
-pub fn write_to_file(file_name: &str, content: &str) -> Result<(), ParsingError> {
-    let mut file = File::create(file_name).map_err(|_| ParsingError::IOError)?;
-    file.write_all(content.as_bytes())
-        .map_err(|_| ParsingError::IOError)?;
+pub fn write_to_file(file_name: &str, content: &str) -> std::io::Result<()> {
+    let mut file = File::create(file_name)?;
+    file.write_all(content.as_bytes())?;
     Ok(())
 }
 
-pub fn write_to_file_option(
-    file_name_option: Option<&String>,
-    content: &str,
-) -> Result<(), ParsingError> {
+pub fn write_to_file_option(file_name_option: Option<&String>, content: &str) -> std::io::Result<()> {
     if let Some(file_name) = file_name_option {
-        write_to_file(file_name, content)
-    } else {
-        let _ = content;
-        Ok(())
+        write_to_file(file_name, content)?;
     }
+    Ok(())
 }
 
-pub fn append_to_file(file_name: &str, content: &str) -> Result<(), ParsingError> {
+pub fn append_to_file(file_name: &str, content: &str) -> std::io::Result<()> {
     let mut file = OpenOptions::new()
         .append(true)
         .create(true)
-        .open(file_name)
-        .map_err(|_| ParsingError::IOError)?;
-    file.write_all(content.as_bytes())
-        .map_err(|_| ParsingError::IOError)?;
+        .open(file_name)?;
+    file.write_all(content.as_bytes())?;
     Ok(())
 }
 
-pub fn append_to_file_option(
-    file_name_option: Option<&String>,
-    content: &str,
-) -> Result<(), ParsingError> {
+pub fn append_to_file_option(file_name_option: Option<&String>, content: &str) -> std::io::Result<()> {
     if let Some(file_name) = file_name_option {
-        append_to_file(file_name, content)
-    } else {
-        let _ = content;
-        Ok(())
+        append_to_file(file_name, content)?;
     }
+    Ok(())
 }
 
-pub fn delete_file_option(file_name_option: Option<&String>) -> Result<(), ParsingError> {
+pub fn delete_file_option(file_name_option: Option<&String>) -> std::io::Result<()> {
     if let Some(file_name) = file_name_option {
         if Path::new(file_name).exists() {
-            fs::remove_file(file_name).map_err(|_| ParsingError::IOError)?;
+            fs::remove_file(file_name)?;
         }
     }
     Ok(())
