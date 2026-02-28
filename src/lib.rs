@@ -1,4 +1,5 @@
 pub mod bits;
+pub mod debug;
 pub mod escaped_string;
 pub mod filesystem;
 pub mod number;
