@@ -3,6 +3,7 @@ use crate::core_utils_error::CoreUtilsError;
 use rust_macro::*;
 
 pub type CLRObjectComputeResult = Result<ExprValue, CoreUtilsError>;
+pub type NullableString = Option<String>;
 
 #[macro_export]
 macro_rules! create_clr_obj_return_value_fn {
@@ -129,6 +130,8 @@ pub enum ExprValue {
     Float64(f64),
 
     Boolean(bool), 
+    Char(char),
+    String(NullableString),
 }
 
 impl ExprValue {
@@ -150,6 +153,7 @@ impl ExprValue {
     create_clr_obj_return_value_fn!(f32, f32, Float32);
     create_clr_obj_return_value_fn!(f64, f64, Float64);
     create_clr_obj_return_value_fn!(bool, bool, Boolean);
+    create_clr_obj_return_value_fn!(char, char, Char);
 
     create_from_rust_value_fn!(from_i8, Int8, i8);
     create_from_rust_value_fn!(from_i16, Int16, i16);
@@ -164,6 +168,21 @@ impl ExprValue {
     create_from_rust_value_fn!(from_isize, NativeInt, isize);
     create_from_rust_value_fn!(from_usize, NativeUInt, usize);
     create_from_rust_value_fn!(from_bool, Boolean, bool);
+    create_from_rust_value_fn!(from_char, Char, char);
+
+    pub fn from_string(v:String) -> Self {
+        Self::String(Some(v))
+    }
+
+    pub fn string(&self) -> Result<Option<&String>, CoreUtilsError> {
+        match self {
+            Self::String(n) => Ok(n.as_ref()),
+            _ => {
+                error_string(format!("cannot get value '{self:?}' in conversion function"));
+                Err(CoreUtilsError::CannotRetrieveValue)
+            }
+        }
+    }
 
     create_clr_number_op_fn!(add, +);
     create_clr_number_op_fn!(sub, -);
