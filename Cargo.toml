@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 ansi_term = "*"
 xml-rs = "*"
+rust_macro = { path = "../rust_macro" }
