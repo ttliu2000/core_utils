@@ -37,3 +37,20 @@ pub fn u8_array_to_u32_little_endian(data: &[u8]) -> Result<u32, &'static str> {
 
     Ok(result)
 }
+
+pub fn u32_to_base26(mut number: u32) -> String {
+    if number == 0 {
+        return "A".to_string();
+    }
+
+    let mut result = String::new();
+
+    while number > 0 {
+        let remainder = (number % 26) as u8;
+        let ch = (b'A' + remainder) as char;
+        result.push(ch);
+        number /= 26;
+    }
+
+    result.chars().rev().collect()
+}
