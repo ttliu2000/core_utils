@@ -7,3 +7,4 @@ pub mod range;
 pub mod string;
 pub mod unique_id;
 pub mod vec;
+pub mod core_utils_error;
