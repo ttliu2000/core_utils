@@ -57,36 +57,71 @@ pub fn u32_to_base26(mut number: u32) -> String {
     result.chars().rev().collect()
 }
 
+macro_rules! parse_unsigned_from_str {
+    ($imm:expr, $unsigned:ty, $signed:ty) => {{
+        let imm = $imm.replace("_", "");
+        if imm.starts_with("0x") {
+            let hex_trimmed = imm.trim_start_matches("0x");
+            let i = <$unsigned>::from_str_radix(hex_trimmed, 16)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($unsigned))))?;
+            Ok(i)
+        }
+        else if imm.starts_with("0b") {
+            let bin_trimmed = imm.trim_start_matches("0b");
+            let i = <$unsigned>::from_str_radix(bin_trimmed, 2)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($unsigned))))?;
+            Ok(i)
+        }
+        else if imm.starts_with("0o") {
+            let oct_trimmed = imm.trim_start_matches("0o");
+            let i = <$unsigned>::from_str_radix(oct_trimmed, 8)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($unsigned))))?;
+            Ok(i)
+        }
+        else if imm.starts_with("-") {
+            let i = <$signed>::from_str_radix(&imm, 10)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {} then to {}", stringify!($signed), stringify!($unsigned))))?;
+            Ok(i as $unsigned)
+        }
+        else {
+            let i = <$unsigned>::from_str_radix(&imm, 10)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($unsigned))))?;
+            Ok(i)
+        }
+    }};
+}
+
+macro_rules! parse_signed_from_str {
+    ($imm:expr, $signed:ty) => {{
+        let imm = $imm.replace("_", "");
+        if imm.starts_with("0x") {
+            let hex_trimmed = imm.trim_start_matches("0x");
+            let i = <$signed>::from_str_radix(hex_trimmed, 16)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($signed))))?;
+            Ok(i)
+        }
+        else if imm.starts_with("0b") {
+            let bin_trimmed = imm.trim_start_matches("0b");
+            let i = <$signed>::from_str_radix(bin_trimmed, 2)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($signed))))?;
+            Ok(i)
+        }
+        else if imm.starts_with("0o") {
+            let oct_trimmed = imm.trim_start_matches("0o");
+            let i = <$signed>::from_str_radix(oct_trimmed, 8)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($signed))))?;
+            Ok(i)
+        }
+        else {
+            let i = <$signed>::from_str_radix(&imm, 10)
+                .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to {}", stringify!($signed))))?;
+            Ok(i)
+        }
+    }};
+}
+
 pub fn get_u64_from_str(imm:&str) -> Result<u64, CoreUtilsError> {
-    let imm = imm.replace("_", "");
-    if imm.starts_with("0x") {
-        let hex_trimmed = imm.trim_start_matches("0x");
-        let i = u64::from_str_radix(&hex_trimmed, 16)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u64")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0b") {
-        let bin_trimmed = imm.trim_start_matches("0b");
-        let i = u64::from_str_radix(&bin_trimmed, 2)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u64")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0o") {
-        let oct_trimmed = imm.trim_start_matches("0o");
-        let i = u64::from_str_radix(&oct_trimmed, 8)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u64")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("-"){
-        let i = i64::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i64 then to u64")))?;
-        Ok(i as u64)
-    }
-    else {
-        let i = u64::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u64")))?;
-        Ok(i)
-    }
+    parse_unsigned_from_str!(imm, u64, i64)
 }
 
 pub fn get_i64_from_str(imm:&str) -> Result<i64, CoreUtilsError> {
@@ -119,136 +154,22 @@ pub fn get_i64_from_str(imm:&str) -> Result<i64, CoreUtilsError> {
         Ok(chars[1] as i64)
     }
     else {
-        let i = i64::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i64")))?;
-        Ok(i)
+        parse_signed_from_str!(imm, i64)
     }
 }
 
 pub fn get_u32_from_str(imm:&str) -> Result<u32, CoreUtilsError> {
-    let imm = imm.replace("_", "");
-    if imm.starts_with("0x") {
-        let hex_trimmed = imm.trim_start_matches("0x");
-        let i = u32::from_str_radix(hex_trimmed, 16)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u32")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0b") {
-        let bin_trimmed = imm.trim_start_matches("0b");
-        let i = u32::from_str_radix(bin_trimmed, 2)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u32")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0o") {
-        let oct_trimmed = imm.trim_start_matches("0o");
-        let i = u32::from_str_radix(oct_trimmed, 8)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u32")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("-") {
-        let i = i32::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i32 then to u32")))?;
-        Ok(i as u32)
-    }
-    else {
-        let i = u32::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u32")))?;
-        Ok(i)
-    }
+    parse_unsigned_from_str!(imm, u32, i32)
 }
 
 pub fn get_i32_from_str(imm:&str) -> Result<i32, CoreUtilsError> {
-    let imm = imm.replace("_", "");
-    if imm.starts_with("0x") {
-        let hex_trimmed = imm.trim_start_matches("0x");
-        let i = i32::from_str_radix(hex_trimmed, 16)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i32")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0b") {
-        let bin_trimmed = imm.trim_start_matches("0b");
-        let i = i32::from_str_radix(bin_trimmed, 2)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i32")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0o") {
-        let oct_trimmed = imm.trim_start_matches("0o");
-        let i = i32::from_str_radix(oct_trimmed, 8)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i32")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("-") {
-        let i = i32::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i32")))?;
-        Ok(i)
-    }
-    else {
-        let i = i32::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i32")))?;
-        Ok(i)
-    }
+    parse_signed_from_str!(imm, i32)
 }
 
 pub fn get_u16_from_str(imm:&str) -> Result<u16, CoreUtilsError> {
-    let imm = imm.replace("_", "");
-    if imm.starts_with("0x") {
-        let hex_trimmed = imm.trim_start_matches("0x");
-        let i = u16::from_str_radix(hex_trimmed, 16)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u16")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0b") {
-        let bin_trimmed = imm.trim_start_matches("0b");
-        let i = u16::from_str_radix(bin_trimmed, 2)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u16")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0o") {
-        let oct_trimmed = imm.trim_start_matches("0o");
-        let i = u16::from_str_radix(oct_trimmed, 8)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u16")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("-"){
-        let i = i16::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i16 then to u16")))?;
-        Ok(i as u16)
-    }
-    else {
-        let i = u16::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u16")))?;
-        Ok(i)
-    }
+    parse_unsigned_from_str!(imm, u16, i16)
 }
 
 pub fn get_u8_from_str(imm:&str) -> Result<u8, CoreUtilsError> {
-    let imm = imm.replace("_", "");
-    if imm.starts_with("0x") {
-        let hex_trimmed = imm.trim_start_matches("0x");
-        let i = u8::from_str_radix(hex_trimmed, 16)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u8")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0b") {
-        let bin_trimmed = imm.trim_start_matches("0b");
-        let i = u8::from_str_radix(bin_trimmed, 2)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u8")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("0o") {
-        let oct_trimmed = imm.trim_start_matches("0o");
-        let i = u8::from_str_radix(oct_trimmed, 8)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u8")))?;
-        Ok(i)
-    }
-    else if imm.starts_with("-"){
-        let i = i8::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to i8 then to u8")))?;
-        Ok(i as u8)
-    }
-    else {
-        let i = u8::from_str_radix(&imm, 10)
-            .map_err(|_| CoreUtilsError::ConversionError(format!("cannot convert imm {imm} to u8")))?;
-        Ok(i)
-    }
+    parse_unsigned_from_str!(imm, u8, i8)
 }
