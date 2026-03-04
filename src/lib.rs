@@ -10,6 +10,7 @@ pub mod unique_id;
 pub mod vec;
 pub mod core_utils_error;
 pub mod file_object;
+pub mod tree;
 pub mod traits {
     pub mod generate_code;
 }
