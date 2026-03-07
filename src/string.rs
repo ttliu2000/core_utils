@@ -23,3 +23,18 @@ pub fn generate_escape_string(s: &str) -> String {
     }
     result
 }
+
+/// GNU ELF version hash function used for strings like "GLIBC_2.2.5".
+pub fn vna_hash(version: &str) -> u32 {
+    let mut h: u32 = 0;
+    for b in version.bytes() {
+        h = h.wrapping_shl(4).wrapping_add(b as u32);
+        let g = h & 0xF0000000;
+        if g != 0 {
+            h ^= g.wrapping_shr(24);
+        }
+        h &= !g;
+    }
+
+    h
+}
