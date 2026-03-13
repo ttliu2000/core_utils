@@ -1,15 +1,19 @@
 use ansi_term::Color;
 
+use crate::log::init_logger;
+
 pub static mut SHOW_DEBUG: bool = true;
 
 #[track_caller]
 pub fn debug_string(data: String) {
     unsafe {
         if SHOW_DEBUG {
+            let _ = init_logger();
             let location = std::panic::Location::caller();
             let file = location.file();
             let line = location.line();
             let s = format!("Debug ({file}:{line}:0): {data}");
+            log::debug!("{}", s);
             println!("{}", Color::Blue.paint(s))
         }
     }
@@ -21,10 +25,12 @@ pub fn debug_str(data: &str) {
 
 #[track_caller]
 pub fn warn_string(data: String) {
+    let _= init_logger();
     let location = std::panic::Location::caller();
     let file = location.file();
     let line = location.line();
     let s = format!("Warning ({file}:{line}:0): {data}");
+    log::warn!("{}", s);
     println!("{}", Color::Yellow.paint(s))
 }
 
@@ -39,10 +45,12 @@ pub fn output_string(data: String) {
 
 #[track_caller]
 pub fn error_string(data: String) {
+    let _ = init_logger();
     let location = std::panic::Location::caller();
     let file = location.file();
     let line = location.line();
     let s = format!("Error ({file}:{line}:0): {}", data);
+    log::error!("{}", s);
     println!("{}", Color::Red.paint(s))
 }
 
